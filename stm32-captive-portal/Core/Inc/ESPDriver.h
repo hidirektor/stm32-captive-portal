@@ -86,7 +86,7 @@ int Wifi_GetMode(UART_HandleTypeDef *huart);
 int Wifi_GetMyIp(UART_HandleTypeDef *huart);
 
 // Station Modu İşlemleri
-int Wifi_Station_ConnectToAp(UART_HandleTypeDef *huart, char *SSID, char *Pass, char *MAC);
+int Wifi_Station_ConnectToAp(UART_HandleTypeDef *huart, char *SSID, char *Pass);
 int Wifi_Station_Disconnect(UART_HandleTypeDef *huart);
 int Wifi_Station_DhcpEnable(UART_HandleTypeDef *huart, bool Enable);
 int Wifi_Station_DhcpIsEnable(UART_HandleTypeDef *huart);

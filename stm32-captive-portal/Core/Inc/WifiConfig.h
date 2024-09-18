@@ -20,6 +20,9 @@
 #define AP_SSID         "OnderGrup"
 #define AP_PASSWORD     "111111111111"
 #define AP_CHANNEL      5
+#define AP_ENCRYPTION   3  // 0: Open, 2: WPA_PSK, 3: WPA2_PSK
+#define AP_MAX_CONN     4  // Maksimum 4 bağlantı
+#define AP_HIDDEN       0  // 0: SSID görünür, 1: SSID gizli
 
 // Login sayfası URL'si
 #define LOGIN_URL       "https://ondergrup.hidirektor.com.tr/login"

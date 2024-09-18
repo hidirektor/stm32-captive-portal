@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ESPDriver.h"
+#include "WifiConfig.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +54,12 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-
+osThreadId_t wifiTaskHandle;
+const osThreadAttr_t wifiTask_attributes = {
+        .name = "wifiTask",
+        .stack_size = 128 * 4,
+        .priority = (osPriority_t) osPriorityNormal,
+    };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,7 +70,7 @@ static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
-
+void StartWifiTask(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -132,6 +138,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  wifiTaskHandle = osThreadNew(StartWifiTask, NULL, &wifiTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -279,19 +286,56 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  // PA_1 pinini ESP8266'nın güç kontrolü için yapılandırma
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void StartWifiTask(void *argument) {
+    uint8_t result;
 
+    // WiFi Bağlantısı
+    Wifi_Init(&huart1);
+    if (Wifi_Station_ConnectToAp(&huart1, WIFI_SSID, WIFI_PASSWORD) == HAL_OK) {
+        if (Wifi_WaitForString(&huart1, 5000, &result, 1, "OK")) {
+            //Wifi ağına bağlanıldı
+        }
+    }
+
+    // Access Point Oluştur
+    Wifi_SoftAp_Create(&huart1, AP_SSID, AP_PASSWORD, AP_CHANNEL, AP_ENCRYPTION, AP_MAX_CONN, AP_HIDDEN);
+    if (Wifi_WaitForString(&huart1, 5000, &result, 1, "OK")) {
+    	//AP oluşturuldu
+    }
+
+    while (1) {
+        Wifi_SendString(&huart1, AT_CWLIF_CMD);
+        if (Wifi_WaitForString(&huart1, 1000, &result, 1, ".")) {
+            //Kullanıcı access pointe bağlandı
+
+            char redirectCmd[128];
+            sprintf(redirectCmd, "AT+CIPSTART=\"TCP\",\"%s\",80\r\n", LOGIN_URL);
+            Wifi_SendString(&huart1, redirectCmd);
+        }
+        osDelay(1000);  // Her saniye kontrol et
+    }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
