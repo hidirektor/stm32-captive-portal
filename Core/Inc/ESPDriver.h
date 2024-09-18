@@ -2,7 +2,7 @@
  * ESPDriver.h
  *
  *  Created on: Aug 10, 2024
- *      Author: hidir
+ *      Author: hidirektor
  */
 
 #ifndef INC_ESPDRIVER_H_
